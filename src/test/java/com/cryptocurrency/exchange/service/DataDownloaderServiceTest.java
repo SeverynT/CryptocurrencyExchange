@@ -2,25 +2,25 @@ package com.cryptocurrency.exchange.service;
 
 import com.cryptocurrency.exchange.dto.AssetsListDTO;
 import com.cryptocurrency.exchange.dto.ExchangeRateDataDTO;
-import com.cryptocurrency.exchange.errors.InvalidRequestBodyException;
+import com.cryptocurrency.exchange.mapper.DataDownloaderMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DataDownloaderServiceTest {
 
-    private DataDownloaderService dataDownloaderService = new DataDownloaderService();
+    private static final String BTC_NAME = "BTC";
+    private static final String INCORRECT_NAME = "INCORRECT";
+
+    private DataDownloaderMapper dataDownloaderMapper = new DataDownloaderMapper();
+    private DataDownloaderService dataDownloaderService = new DataDownloaderService(dataDownloaderMapper);
 
     @Test
     @DisplayName("should get exchange rate date from external API should return empty list when asset base is incorrect")
     void shouldGetExchangeRateDataFromExternalApiShouldReturnEmptyListWhenAssetBaseIsIncorrect() {
 //        given
-        String assetBase = "INCORRECT";
+        String assetBase = INCORRECT_NAME;
 
 //        when
         ExchangeRateDataDTO exchangeRateDataDTO = dataDownloaderService.getExchangeRateDataFromExternalApi(assetBase);
@@ -34,7 +34,7 @@ class DataDownloaderServiceTest {
     @DisplayName("should get exchange rate date from external API by asset base")
     void shouldGetExchangeRateDataFromExternalApiS() {
 //        given
-        String assetBase = "BTC";
+        String assetBase = BTC_NAME;
 
 //        when
         ExchangeRateDataDTO exchangeRateDataDTO = dataDownloaderService.getExchangeRateDataFromExternalApi(assetBase);

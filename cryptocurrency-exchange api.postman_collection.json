@@ -1,0 +1,64 @@
+{
+	"info": {
+		"_postman_id": "a2391ed0-fecd-4cd1-9eba-720c2b1c534a",
+		"name": "cryptocurrency-exchange api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "localhost:8081/currencies/{assetBase}?filter={assetQuote}",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8081/currencies/BTC?filter=ETH,LTC",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"currencies",
+						"BTC"
+					],
+					"query": [
+						{
+							"key": "filter",
+							"value": "ETH,LTC"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8081/currencies/{assetBase}?filter={assetQuote} Copy",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"from\": \"BTC\",\r\n    \"to\": [\r\n        \"TEL\",\r\n        \"ETH\"\r\n    ],\r\n    \"amount\": 121\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8081/currencies/exchange",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"currencies",
+						"exchange"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

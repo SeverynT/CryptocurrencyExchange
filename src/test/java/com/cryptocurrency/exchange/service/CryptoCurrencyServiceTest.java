@@ -3,27 +3,36 @@ package com.cryptocurrency.exchange.service;
 import com.cryptocurrency.exchange.dto.CurrenciesResponseDTO;
 import com.cryptocurrency.exchange.dto.ExchangeRequestDTO;
 import com.cryptocurrency.exchange.dto.ExchangeResponseDTO;
+import com.cryptocurrency.exchange.errors.AssetQuoteException;
 import com.cryptocurrency.exchange.errors.CryptocurrencyNotExistsException;
 import com.cryptocurrency.exchange.errors.InvalidRequestBodyException;
+import com.cryptocurrency.exchange.mapper.DataDownloaderMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CryptoCurrencyServiceTest {
 
-    private DataDownloaderService dataDownloaderService = new DataDownloaderService();
+    private static final String BTC_NAME = "BTC";
+    private static final String ETH_NAME = "ETH";
+    private static final String LTC_NAME = "LTC";
+    private static final String INCORRECT_NAME = "INCORRECT";
+
+    private DataDownloaderMapper dataDownloaderMapper = new DataDownloaderMapper();
+    private DataDownloaderService dataDownloaderService = new DataDownloaderService(dataDownloaderMapper);
     private CryptoCurrencyService cryptoCurrencyService = new CryptoCurrencyService(dataDownloaderService);
 
     @Test
     @DisplayName("should throw CryptocurrencyNotExistsException when asset base name not exists")
     void shouldGetRatesForCryptocurrency_throwsCryptocurrencyNotExistsException_whenAssetBaseIncorrect() {
 //        given
-        String assetBase = "INCORRECT";
+        String assetBase = INCORRECT_NAME;
 
 //        when
         var exception = catchThrowable(() -> cryptoCurrencyService.getRatesForCryptocurrency(assetBase, null));
@@ -38,8 +47,8 @@ class CryptoCurrencyServiceTest {
     @DisplayName("should throw CryptocurrencyNotExistsException when asset quote name not exists")
     void shouldGetRatesForCryptocurrency_throwsCryptocurrencyNotExistsException_whenAssetQuoteIncorrect() {
 //        given
-        String assetBase = "BTC";
-        List<String> assetQuotes = List.of("INCORRECT");
+        String assetBase = BTC_NAME;
+        List<String> assetQuotes = List.of(INCORRECT_NAME);
 
 //        when
         var exception = catchThrowable(() -> cryptoCurrencyService.getRatesForCryptocurrency(assetBase, assetQuotes));
@@ -51,10 +60,26 @@ class CryptoCurrencyServiceTest {
     }
 
     @Test
+    @DisplayName("should throw AssetQuoteException when asset quote has the same name like asset base")
+    void shouldGetRatesForCryptocurrency_throwsAssetQuoteException_whenAssetQuoteIncorrect() {
+//        given
+        String assetBase = BTC_NAME;
+        List<String> assetQuotes = List.of(BTC_NAME);
+
+//        when
+        var exception = catchThrowable(() -> cryptoCurrencyService.getRatesForCryptocurrency(assetBase, assetQuotes));
+
+//        then
+        assertThat(exception)
+                .isInstanceOf(AssetQuoteException.class)
+                .hasMessageContaining("has the same name");
+    }
+
+    @Test
     @DisplayName("should get all rates for cryptocurrency without asset quotes")
     void shouldGetRatesForCryptoCurrencyWithoutAssetQuotes() {
 //        given
-        String assetBase = "BTC";
+        String assetBase = BTC_NAME;
 
 //        when
         CurrenciesResponseDTO currenciesResponseDTO = cryptoCurrencyService.getRatesForCryptocurrency(assetBase, null);
@@ -69,8 +94,8 @@ class CryptoCurrencyServiceTest {
     @DisplayName("should get all rates for cryptocurrency with asset quotes")
     void shouldGetRatesForCryptoCurrencyWithAssetQuotes() {
 //        given
-        String assetBase = "BTC";
-        List<String> assetQuotes = List.of("LTC", "ETH");
+        String assetBase = BTC_NAME;
+        List<String> assetQuotes = List.of(LTC_NAME, ETH_NAME);
 
 //        when
         CurrenciesResponseDTO currenciesResponseDTO = cryptoCurrencyService.getRatesForCryptocurrency(assetBase, assetQuotes);
@@ -89,7 +114,7 @@ class CryptoCurrencyServiceTest {
 //        given
         ExchangeRequestDTO exchangeRequestDTO = ExchangeRequestDTO.builder()
                 .from(null)
-                .to(List.of("ETH", "LTC"))
+                .to(List.of(ETH_NAME, LTC_NAME))
                 .amount(new BigDecimal(100))
                 .build();
 
@@ -103,11 +128,11 @@ class CryptoCurrencyServiceTest {
     }
 
     @Test
-    @DisplayName("should throw MethodArgumentNotValidException when 'to' field is empty in request body")
-    void shouldGetExchangePredictionsReturn400WhenToFieldIsEmpty() {
+    @DisplayName("should throw InvalidRequestBodyException when 'to' field is empty in request body")
+    void shouldGetExchangePredictions_throwsInvalidRequestBodyException_WhenToFieldIsEmpty() {
 //        given
         ExchangeRequestDTO exchangeRequestDTO = ExchangeRequestDTO.builder()
-                .from("BTC")
+                .from(BTC_NAME)
                 .to(null)
                 .amount(new BigDecimal(100))
                 .build();
@@ -123,11 +148,11 @@ class CryptoCurrencyServiceTest {
 
     @Test
     @DisplayName("should throw MethodArgumentNotValidException when 'amount' field is empty in request body")
-    void shouldGetExchangePredictionsReturn400WhenAmountFieldIsEmpty() {
+    void shouldGetExchangePredictions_throwsMethodArgumentNotValidExceptionWhenAmountFieldIsEmpty() {
 //        given
         ExchangeRequestDTO exchangeRequestDTO = ExchangeRequestDTO.builder()
-                .from("BTC")
-                .to(List.of("ETH", "LTC"))
+                .from(BTC_NAME)
+                .to(List.of(ETH_NAME, LTC_NAME))
                 .amount(null)
                 .build();
 
@@ -145,8 +170,8 @@ class CryptoCurrencyServiceTest {
     void shouldGetExchangePredictions() {
 //        given
         ExchangeRequestDTO exchangeRequestDTO = ExchangeRequestDTO.builder()
-                .from("BTC")
-                .to(List.of("ETH", "LTC"))
+                .from(BTC_NAME)
+                .to(List.of(ETH_NAME, LTC_NAME))
                 .amount(new BigDecimal(100))
                 .build();
 
@@ -157,6 +182,6 @@ class CryptoCurrencyServiceTest {
         assertEquals(exchangeRequestDTO.getFrom(), exchangeResponseDTO.getFrom());
         assertTrue(exchangeResponseDTO.getTo().containsKey(exchangeRequestDTO.getTo().get(0)));
         assertTrue(exchangeResponseDTO.getTo().containsKey(exchangeRequestDTO.getTo().get(1)));
-        assertEquals(exchangeRequestDTO.getAmount(), exchangeResponseDTO.getTo().get("ETH").getAmount());
+        assertEquals(exchangeRequestDTO.getAmount(), exchangeResponseDTO.getTo().get(ETH_NAME).getAmount());
     }
 }

@@ -1,10 +1,10 @@
 package com.cryptocurrency.exchange.service;
 
 import com.cryptocurrency.exchange.dto.*;
+import com.cryptocurrency.exchange.errors.AssetQuoteException;
 import com.cryptocurrency.exchange.errors.CryptocurrencyNotExistsException;
 import com.cryptocurrency.exchange.errors.InvalidRequestBodyException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -29,6 +29,7 @@ public class CryptoCurrencyService {
         ExchangeRateDataDTO exchangeRateDataDTO = dataDownloaderService.getExchangeRateDataFromExternalApi(assetBase);
 
         if (assetQuotes != null && !assetQuotes.isEmpty()) {
+            checkAssetBaseHasSameNameLikeAssetQuote(assetBase, assetQuotes);
             List<RateDTO> rateDTOS = new ArrayList<>();
 
             for (String assetQuote : assetQuotes) {
@@ -52,11 +53,11 @@ public class CryptoCurrencyService {
 
         CurrenciesResponseDTO currenciesResponseDTO = getRatesForCryptocurrency(exchangeRequestDTO.getFrom(), exchangeRequestDTO.getTo());
         BigDecimal amount = exchangeRequestDTO.getAmount();
-        Map<String, CurrencyExchangeDTO> to = new HashMap<>();
+        Map<String, CurrencyExchangeDTO> cryptocurrencyDTOmap = new HashMap<>();
 
-        Iterator<Map.Entry<String, BigDecimal>> it = currenciesResponseDTO.getRates().entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry<String, BigDecimal> rate = it.next();
+        Iterator<Map.Entry<String, BigDecimal>> iterator = currenciesResponseDTO.getRates().entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, BigDecimal> rate = iterator.next();
 
             CurrencyExchangeDTO currencyExchangeDTO = CurrencyExchangeDTO.builder()
                     .rate(rate.getValue())
@@ -65,13 +66,19 @@ public class CryptoCurrencyService {
                     .fee(calculateFeeOfExchange(amount))
                     .build();
 
-            to.put(rate.getKey(), currencyExchangeDTO);
+            cryptocurrencyDTOmap.put(rate.getKey(), currencyExchangeDTO);
         }
 
         return ExchangeResponseDTO.builder()
                 .from(exchangeRequestDTO.getFrom())
-                .to(to)
+                .to(cryptocurrencyDTOmap)
                 .build();
+    }
+
+    private void checkAssetBaseHasSameNameLikeAssetQuote(String assetBase, List<String> assetQuotes) {
+        if (assetQuotes.stream().anyMatch(assetQuote -> assetQuote.equals(assetBase))) {
+            throw new AssetQuoteException("Asset quote has the same name like asset base");
+        }
     }
 
     private void checkExchangeRequestDTOisCorrect(ExchangeRequestDTO exchangeRequestDTO) {
@@ -86,12 +93,14 @@ public class CryptoCurrencyService {
         if (exchangeRequestDTO.getAmount() == null) {
             throw new InvalidRequestBodyException("Fill in the 'amount' field in ExchangeRequestDTO");
         }
+
+        checkAssetBaseHasSameNameLikeAssetQuote(exchangeRequestDTO.getFrom(), exchangeRequestDTO.getTo());
     }
 
     private BigDecimal calculateResultOfExchange(BigDecimal rate, BigDecimal amount) {
         BigDecimal fee = calculateFeeOfExchange(amount);
-//        result = (amount - fee) : rate;
-        BigDecimal result = (amount.subtract(fee)).divide(rate, PRECISION_OF_NUMBERS, RoundingMode.DOWN);
+//        result = (amount - fee) * rate;
+        BigDecimal result = (amount.subtract(fee)).multiply(rate).setScale(PRECISION_OF_NUMBERS, RoundingMode.DOWN);
         return result;
     }
 

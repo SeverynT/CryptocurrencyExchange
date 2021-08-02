@@ -2,7 +2,6 @@ package com.cryptocurrency.exchange.controller;
 
 import com.cryptocurrency.exchange.dto.CurrenciesResponseDTO;
 import com.cryptocurrency.exchange.dto.ExchangeRequestDTO;
-import com.cryptocurrency.exchange.errors.InvalidRequestBodyException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,13 +14,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -29,6 +25,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 class CryptoCurrencyControllerTest {
+
+    private static final String BTC_NAME = "BTC";
+    private static final String ETH_NAME = "ETH";
+    private static final String LTC_NAME = "LTC";
 
     @LocalServerPort
     private int port;
@@ -51,7 +51,7 @@ class CryptoCurrencyControllerTest {
     @DisplayName("should get all rates for cryptocurrency without filter by http GET /currencies endpoint")
     void httpGet_returnRatesForCryptoCurrencyWithoutFilter() {
 //        given
-        String assetBase = "BTC";
+        String assetBase = BTC_NAME;
 
 //        when
         CurrenciesResponseDTO result = testRestTemplate.getForObject("http://localhost:" + port + "/currencies/" + assetBase, CurrenciesResponseDTO.class);
@@ -66,8 +66,8 @@ class CryptoCurrencyControllerTest {
     @DisplayName("should get all rates for cryptocurrency with filter by http GET /currencies endpoint")
     void httpGet_returnRatesForCryptoCurrencyWithFilter() {
 //        given
-        String assetBase = "BTC";
-        String filter = "ETH";
+        String assetBase = BTC_NAME;
+        String filter = ETH_NAME;
 
 //        when
         CurrenciesResponseDTO result = testRestTemplate.getForObject("http://localhost:" + port + "/currencies/" + assetBase + "?filter=" + filter,
@@ -86,7 +86,7 @@ class CryptoCurrencyControllerTest {
 //        given
         ExchangeRequestDTO requestBody = ExchangeRequestDTO.builder()
                 .from(null)
-                .to(List.of("ETH", "LTC"))
+                .to(List.of(ETH_NAME, LTC_NAME))
                 .amount(new BigDecimal(100))
                 .build();
 
@@ -106,7 +106,7 @@ class CryptoCurrencyControllerTest {
     void getExchangePredictionsShouldReturn400WhenToIsEmpty() throws Exception {
 //        given
         ExchangeRequestDTO requestBody = ExchangeRequestDTO.builder()
-                .from("BTC")
+                .from(BTC_NAME)
                 .to(null)
                 .amount(new BigDecimal(100))
                 .build();
@@ -127,8 +127,8 @@ class CryptoCurrencyControllerTest {
     void getExchangePredictionsShouldReturn400WhenAmountIsEmpty() throws Exception {
 //        given
         ExchangeRequestDTO requestBody = ExchangeRequestDTO.builder()
-                .from("BTC")
-                .to(List.of("ETH", "LTC"))
+                .from(BTC_NAME)
+                .to(List.of(ETH_NAME, LTC_NAME))
                 .amount(null)
                 .build();
 
@@ -148,8 +148,8 @@ class CryptoCurrencyControllerTest {
     void getExchangePredictions() throws Exception {
 //        given
         ExchangeRequestDTO requestBody = ExchangeRequestDTO.builder()
-                .from("BTC")
-                .to(List.of("ETH", "LTC"))
+                .from(BTC_NAME)
+                .to(List.of(ETH_NAME, LTC_NAME))
                 .amount(new BigDecimal(100))
                 .build();
 

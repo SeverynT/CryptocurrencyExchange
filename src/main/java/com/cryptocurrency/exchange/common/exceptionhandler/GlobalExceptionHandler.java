@@ -1,9 +1,6 @@
 package com.cryptocurrency.exchange.common.exceptionhandler;
 
-import com.cryptocurrency.exchange.errors.ApiConnectionException;
-import com.cryptocurrency.exchange.errors.CryptocurrencyNotExistsException;
-import com.cryptocurrency.exchange.errors.InvalidRequestBodyException;
-import com.cryptocurrency.exchange.errors.ResourceNotFoundException;
+import com.cryptocurrency.exchange.errors.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -100,6 +97,17 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(errorDTO, new HttpHeaders(), errorDTO.getStatus());
     }
 
+    @ExceptionHandler(AssetMapperException.class)
+    public ResponseEntity<Object> assetMapperException(AssetMapperException ex) {
+        ErrorDTO errorDTO = ErrorDTO.builder()
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .message(ex.getMessage())
+                .errors(Arrays.asList(ERROR_OCCURRED))
+                .build();
+
+        return new ResponseEntity<>(errorDTO, new HttpHeaders(), errorDTO.getStatus());
+    }
+
     @ExceptionHandler(CryptocurrencyNotExistsException.class)
     public ResponseEntity<Object> cryptoCurrencyNotExistsException(CryptocurrencyNotExistsException ex) {
         ErrorDTO errorDTO = ErrorDTO.builder()
@@ -113,6 +121,17 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(InvalidRequestBodyException.class)
     public ResponseEntity<Object> invalidRequestBodyException(InvalidRequestBodyException ex) {
+        ErrorDTO errorDTO = ErrorDTO.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .message(ex.getMessage())
+                .errors(Arrays.asList(ERROR_OCCURRED))
+                .build();
+
+        return new ResponseEntity<>(errorDTO, new HttpHeaders(), errorDTO.getStatus());
+    }
+
+    @ExceptionHandler(AssetQuoteException.class)
+    public ResponseEntity<Object> assetQuoteException(AssetQuoteException ex) {
         ErrorDTO errorDTO = ErrorDTO.builder()
                 .status(HttpStatus.BAD_REQUEST)
                 .message(ex.getMessage())
