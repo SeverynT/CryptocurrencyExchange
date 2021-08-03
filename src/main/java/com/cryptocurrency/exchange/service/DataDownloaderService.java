@@ -25,7 +25,7 @@ public class DataDownloaderService {
      * *  The key name and value we should get from an external file. Due to the demo version, the values are given explicitly.
      **/
     private static final String KEY_NAME = "X-CoinAPI-Key";
-    private static final String KEY_VALUE = "64D99B5B-A214-4E8E-92F1-CAFBAAFDE4F3";
+    private static final String KEY_VALUE = "1CC8F708-242A-4A85-A271-71EEFB76967B";
 
     private DataDownloaderMapper dataDownloaderMapper;
 
