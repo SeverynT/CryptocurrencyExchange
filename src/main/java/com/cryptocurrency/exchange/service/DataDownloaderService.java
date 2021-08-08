@@ -1,13 +1,13 @@
 package com.cryptocurrency.exchange.service;
 
-import com.cryptocurrency.exchange.dto.AssetsListDTO;
 import com.cryptocurrency.exchange.dto.ExchangeRateDataDTO;
+import com.cryptocurrency.exchange.dto.ExchangeRatesDataDTO;
 import com.cryptocurrency.exchange.errors.ApiConnectionException;
+import com.cryptocurrency.exchange.errors.AssetQuoteException;
 import com.cryptocurrency.exchange.mapper.DataDownloaderMapper;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
@@ -18,8 +18,8 @@ import java.io.IOException;
 public class DataDownloaderService {
 
     private static final String EXCHANGE_RATE_URL_BEGINNING = "https://rest.coinapi.io/v1/exchangerate/";
-    private static final String ASSETS_LIST_URL_BEGINNING = "https://rest.coinapi.io/v1/assets/";
     private static final String ERROR_DOWNLOADING_MESSAGE = "Error during assets downloading";
+    private static final String INCORRECT_ASSET_QUOTE_NAME_ERROR_MESSAGE_FROM_EXTERNAL_API = "You requested specific single item that we don't have at this moment.";
 
     /**
      * *  The key name and value we should get from an external file. Due to the demo version, the values are given explicitly.
@@ -33,10 +33,14 @@ public class DataDownloaderService {
         this.dataDownloaderMapper = dataDownloaderMapper;
     }
 
-    public ExchangeRateDataDTO getExchangeRateDataFromExternalApi(String assetBase) {
+    public ExchangeRateDataDTO getExchangeRateDataFromExternalApi(String assetBase, String assetQuote) {
         try {
 
-            JSONObject jsonObject = new JSONObject(getDataFromExternalApi(EXCHANGE_RATE_URL_BEGINNING + assetBase).string());
+            JSONObject jsonObject = new JSONObject(getDataFromExternalApi(EXCHANGE_RATE_URL_BEGINNING + assetBase + "/" + assetQuote).string());
+
+            if (jsonObject.toString().contains(INCORRECT_ASSET_QUOTE_NAME_ERROR_MESSAGE_FROM_EXTERNAL_API)) {
+                throw new AssetQuoteException("You requested specific " + assetQuote + " cryptocurrency that we don't have at this moment.");
+            }
 
             return dataDownloaderMapper.convertJsonObjectToExchangeRateDataDTO(jsonObject);
         } catch (IOException | JSONException exception) {
@@ -44,12 +48,12 @@ public class DataDownloaderService {
         }
     }
 
-    public AssetsListDTO getAssetsListFromExternalApi() {
+    public ExchangeRatesDataDTO getExchangeRatesDataFromExternalApi(String assetBase) {
         try {
 
-            JSONArray jsonArray = new JSONArray(getDataFromExternalApi(ASSETS_LIST_URL_BEGINNING).string());
+            JSONObject jsonObject = new JSONObject(getDataFromExternalApi(EXCHANGE_RATE_URL_BEGINNING + assetBase).string());
 
-            return dataDownloaderMapper.convertJsonArrayToAssetsListDTO(jsonArray);
+            return dataDownloaderMapper.convertJsonObjectToExchangeRatesDataDTO(jsonObject);
         } catch (IOException | JSONException exception) {
             throw new ApiConnectionException(ERROR_DOWNLOADING_MESSAGE);
         }

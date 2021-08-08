@@ -9,7 +9,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AssetsListDTO {
+public class ExchangeRatesDataDTO {
 
-    private List<String> asset_ids;
+    private String asset_id_base;
+
+    private List<RateDTO> rates;
+
 }

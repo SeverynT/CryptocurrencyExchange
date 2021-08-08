@@ -108,8 +108,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(errorDTO, new HttpHeaders(), errorDTO.getStatus());
     }
 
-    @ExceptionHandler(CryptocurrencyNotExistsException.class)
-    public ResponseEntity<Object> cryptoCurrencyNotExistsException(CryptocurrencyNotExistsException ex) {
+    @ExceptionHandler(InvalidRequestBodyException.class)
+    public ResponseEntity<Object> invalidRequestBodyException(InvalidRequestBodyException ex) {
         ErrorDTO errorDTO = ErrorDTO.builder()
                 .status(HttpStatus.BAD_REQUEST)
                 .message(ex.getMessage())
@@ -119,8 +119,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(errorDTO, new HttpHeaders(), errorDTO.getStatus());
     }
 
-    @ExceptionHandler(InvalidRequestBodyException.class)
-    public ResponseEntity<Object> invalidRequestBodyException(InvalidRequestBodyException ex) {
+    @ExceptionHandler(AssetBaseException.class)
+    public ResponseEntity<Object> assetBaseException(AssetBaseException ex) {
         ErrorDTO errorDTO = ErrorDTO.builder()
                 .status(HttpStatus.BAD_REQUEST)
                 .message(ex.getMessage())
